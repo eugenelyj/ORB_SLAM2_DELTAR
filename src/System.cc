@@ -319,6 +319,42 @@ void System::Shutdown()
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
 }
 
+void System::SaveMap(const string &filename){
+
+    cout << endl << "Saving map to " << filename << " ..." << endl;
+
+    vector<MapPoint*> vpMPs = mpMap->GetAllMapPoints();
+    // sort(vpMPs.begin(),vpMPs.end(),MapPoint::mnId);
+
+    // Transform all keyframes so that the first keyframe is at the origin.
+    // After a loop closure the first keyframe might not be at the origin.
+    // cv::Mat Two = vpKFs[0]->GetPoseInverse();
+
+    ofstream f;
+    f.open(filename.c_str());
+    f << fixed;
+    f << "Totally " << vpMPs.size() << " map points." << endl;
+
+    // Frame pose is stored relative to its reference keyframe (which is optimized by BA and pose graph).
+    // We need to get first the keyframe pose and then concatenate the relative transformation.
+    // Frames not localized (tracking failure) are not saved.
+
+    // For each frame we have a reference keyframe (lRit), the timestamp (lT) and a flag
+    // which is true when tracking failed (lbL).
+    // list<ORB_SLAM2::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
+    // list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
+    for(vector<MapPoint*>::iterator p=vpMPs.begin(); p != vpMPs.end(); p++){
+        MapPoint* mp = *p;
+        cv::Mat worldPos = mp->GetWorldPos();
+        f << setprecision(9) << worldPos.at<float>(0,0) << " " << 
+        worldPos.at<float>(1,0) << " " << worldPos.at<float>(2,0) << endl;
+    }
+
+    f.close();
+    cout << endl << "map saved!" << endl;
+
+}
+
 void System::SaveTrajectoryTUM(const string &filename)
 {
     cout << endl << "Saving camera trajectory to " << filename << " ..." << endl;
